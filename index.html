@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="핑크 RTA">
+<title>핑크 RTA</title>
+<style>
+:root{--bg:#0e1013;--panel:#171a1f;--fg:#e8eaed;--dim:#7d8590;--grid:#262b32;--ok:#4ade80;--hi:#fb923c;--lo:#60a5fa;}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"Apple SD Gothic Neo",sans-serif;-webkit-user-select:none;user-select:none}
+body{display:flex;flex-direction:column;gap:10px;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+header{display:flex;justify-content:space-between;align-items:baseline}
+h1{font-size:17px;margin:0;font-weight:600}
+#lvl{font-variant-numeric:tabular-nums;font-size:26px;font-weight:700}
+#lvl small{font-size:13px;color:var(--dim);font-weight:400}
+#stage{flex:1;min-height:0;background:var(--panel);border-radius:10px;position:relative}
+canvas{width:100%;height:100%;display:block}
+#msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--dim);line-height:1.6;font-size:15px}
+.row{display:flex;gap:8px}
+button{flex:1;font:inherit;font-size:16px;font-weight:600;padding:14px 8px;border-radius:10px;border:0;background:var(--panel);color:var(--fg)}
+button.on{background:var(--fg);color:var(--bg)}
+button#go{background:var(--ok);color:#06210f}
+button:focus-visible{outline:2px solid var(--fg)}
+.hint{font-size:12px;color:var(--dim);text-align:center}
+</style>
+</head>
+<body>
+<header><h1>핑크 RTA</h1><div id="lvl">-- <small>dBFS</small></div></header>
+<div id="stage"><canvas id="cv"></canvas><div id="msg">콘솔에서 핑크노이즈를 내보내고<br>스피커 쪽으로 폰 마이크를 향한 뒤<br>아래 <b>시작</b>을 누르세요.<br><br>막대가 평평하면 좋은 상태예요.</div></div>
+<div class="row">
+<button id="go">시작</button>
+<button id="spd">평균 5초</button>
+<button id="frz">고정</button>
+<button id="rst">초기화</button>
+</div>
+<div class="hint">막대 = 평균 대비 ±12dB · 파랑: 부족 · 주황: 넘침 · 80Hz 아래는 폰 마이크가 약해서 참고만</div>
+<script>
+const BANDS=[31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000];
+const LBL={31.5:'31',63:'63',125:'125',250:'250',500:'500',1000:'1k',2000:'2k',4000:'4k',8000:'8k',16000:'16k'};
+let ctx,an,buf,sr,bins,avg=null,tau=5,frozen=false,running=false,lastT=0,wake=null;
+const cv=document.getElementById('cv'),g=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+
+async function start(){
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    await ctx.resume();
+    sr=ctx.sampleRate;
+    an=ctx.createAnalyser();an.fftSize=16384;an.smoothingTimeConstant=0;an.minDecibels=-140;
+    ctx.createMediaStreamSource(s).connect(an);
+    buf=new Float32Array(an.frequencyBinCount);
+    bins=BANDS.map(c=>{const lo=c/Math.pow(2,1/6),hi=c*Math.pow(2,1/6),f=sr/an.fftSize;
+      return [Math.max(1,Math.round(lo/f)),Math.max(1,Math.round(hi/f)-1)]});
+    bins=bins.map(([a,b])=>[a,Math.max(a,b)]);
+    $('msg').hidden=true;running=true;$('go').textContent='정지';$('go').classList.remove('on');
+    try{wake=await navigator.wakeLock.request('screen')}catch(e){}
+    lastT=performance.now();requestAnimationFrame(loop);
+  }catch(e){
+    $('msg').hidden=false;
+    $('msg').innerHTML='마이크를 쓸 수 없어요.<br>설정 → Safari → 마이크 를 "허용"으로 바꾸고<br>페이지를 새로고침하세요.<br><small>'+e.name+'</small>';
+  }
+}
+function stop(){running=false;if(ctx)ctx.close();$('go').textContent='시작';if(wake)wake.release().catch(()=>{})}
+
+function loop(t){
+  if(!running)return;
+  const dt=(t-lastT)/1000;lastT=t;
+  if(!frozen){
+    an.getFloatFrequencyData(buf);
+    const a=1-Math.exp(-dt/tau);
+    const p=bins.map(([lo,hi])=>{let s=0;for(let i=lo;i<=hi;i++)s+=Math.pow(10,buf[i]/10);return s});
+    avg=avg?avg.map((v,i)=>v+(p[i]-v)*a):p;
+    // 처음엔 빨리 채우기
+    if(avg._n===undefined)avg._n=0;
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function draw(){
+  const dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+  if(cv.width!==W*dpr||cv.height!==H*dpr){cv.width=W*dpr;cv.height=H*dpr}
+  g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  if(!avg)return;
+  const db=avg.map(v=>10*Math.log10(v+1e-20));
+  // 기준: 100Hz~10kHz 막대의 평균(dB)
+  const ref=db.slice(5,BANDS.indexOf(10000)+1);
+  const m=ref.reduce((a,b)=>a+b,0)/ref.length;
+  // 전체 레벨
+  const tot=10*Math.log10(avg.reduce((a,b)=>a+b,0));
+  $('lvl').innerHTML=(tot+ 0).toFixed(0)+' <small>dBFS</small>';
+  const top=18,bot=22,L=30,R=6,h=H-top-bot,w=W-L-R,range=12;
+  g.font='11px -apple-system,sans-serif';g.textAlign='right';g.textBaseline='middle';
+  for(let d=-12;d<=12;d+=6){const y=top+h/2-d/range*h/2;
+    g.strokeStyle=d===0?css('--dim'):css('--grid');g.lineWidth=d===0?1.5:1;
+    g.beginPath();g.moveTo(L,y);g.lineTo(W-R,y);g.stroke();
+    g.fillStyle=css('--dim');g.fillText((d>0?'+':'')+d,L-4,y)}
+  const bw=w/BANDS.length;
+  BANDS.forEach((c,i)=>{
+    let d=Math.max(-range,Math.min(range,db[i]-m));
+    const x=L+i*bw+bw*0.12,y0=top+h/2,y1=y0-d/range*h/2;
+    const col=Math.abs(d)<=3?css('--ok'):d>0?css('--hi'):css('--lo');
+    g.globalAlpha=c<80?0.35:1;g.fillStyle=col;
+    g.fillRect(x,Math.min(y0,y1),bw*0.76,Math.max(2,Math.abs(y1-y0)));
+    g.globalAlpha=1;
+    if(LBL[c]){g.fillStyle=css('--dim');g.textAlign='center';g.textBaseline='top';g.fillText(LBL[c],x+bw*0.38,H-bot+6)}
+  });
+  if(frozen){g.fillStyle=css('--fg');g.textAlign='left';g.textBaseline='top';g.fillText('고정됨',L+6,top+4)}
+}
+
+$('go').onclick=()=>running?stop():start();
+$('spd').onclick=()=>{tau=tau===5?1:tau===1?15:5;$('spd').textContent='평균 '+tau+'초'};
+$('frz').onclick=()=>{frozen=!frozen;$('frz').classList.toggle('on',frozen);$('frz').textContent=frozen?'해제':'고정'};
+$('rst').onclick=()=>{avg=null};
+</script>
+</body>
+</html>
