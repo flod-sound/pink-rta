@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <polygon points="56,246 246,56 968,56 968,778 778,968 56,968" fill="#ffe98a"/>
+  <g stroke="#c9b45e" stroke-width="7" fill="none">
+    <polyline points="266,90 934,90 934,758"/>
+    <polyline points="90,266 90,934 758,934"/>
+  </g>
+  <rect x="250" y="374" width="620" height="22" fill="#0b0b0b"/>
+  <!-- 기울어진 RTA 막대 -->
+  <g fill="#0b0b0b">
+    <polygon points="270,800 352,800 412,520 330,520"/>
+    <polygon points="390,800 472,800 540,470 458,470"/>
+    <polygon points="510,800 592,800 652,500 570,500"/>
+    <polygon points="630,800 712,800 782,460 700,460"/>
+    <polygon points="750,800 832,800 884,550 802,550"/>
+  </g>
+</svg>
