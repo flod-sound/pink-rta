@@ -102,10 +102,10 @@ button.on{background:var(--text);color:var(--bg)}
 
 <section class="rta">
   <canvas id="cv"></canvas>
-  <div class="overlay" id="msg"><div>콘솔에서 <b>핑크노이즈</b>를 내보내고<br>폰 마이크(아래쪽)를 <b>스피커 쪽</b>으로 향한 뒤<br><b>시작</b>을 누르세요.</div><div>막대가 평평할수록 좋은 상태예요.</div></div>
+  <div class="overlay" id="msg"><div>콘솔에서 <b>핑크노이즈</b>를 내보내고<br>폰 마이크(아래쪽)를 <b>스피커 쪽</b>으로 향한 뒤<br><b>시작</b>을 누르세요.</div><div><b>흰 선(평균)</b>이 점선과 나란할수록 좋은 상태예요.</div></div>
 </section>
 
-<div id="dbg">v7 · 대기</div>
+<div id="dbg">v8 · 대기</div>
 <div class="controls">
   <button id="go">시작</button>
   <button id="spd">평균 5초</button>
@@ -121,13 +121,13 @@ button.on{background:var(--text);color:var(--bg)}
 <script>
 const BANDS=[31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000];
 const LBL={31.5:'31',63:'63',125:'125',250:'250',500:'500',1000:'1k',2000:'2k',4000:'4k',8000:'8k',16000:'16k'};
-const VER="v7";
+const VER="v8";
 const GMIN=70,GMAX=110,TOL=2;
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 let target=store.get('target',95),cal=store.get('cal',120),calSet=store.get('calSet',false);
-let procTxt="",dbgT=0,src=null,mute=null,ctx,an,buf,bins,avg=null,fast=null,tau=5,frozen=false,running=false,lastT=0,wake=null,stream=null;
+let rt=null,yTop=null,procTxt="",dbgT=0,src=null,mute=null,ctx,an,buf,bins,avg=null,fast=null,tau=5,frozen=false,running=false,lastT=0,wake=null,stream=null;
 const cv=$('cv'),g=cv.getContext('2d');
 const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const col={};['--y','--hi','--lo','--dim','--line','--text','--panel2'].forEach(k=>col[k]=C(k));
@@ -198,7 +198,9 @@ function loop(t){
     const p=bins.map(([lo,hi])=>{let s=0;for(let i=lo;i<=hi;i++)s+=10**(buf[i]/10);return s});
     const a=1-Math.exp(-dt/tau),af=1-Math.exp(-dt/0.6);
     const tot=p.reduce((x,y)=>x+y,0);
+    const ar=1-Math.exp(-dt/0.2);
     avg=avg?avg.map((v,i)=>v+(p[i]-v)*a):p;
+    rt=rt?rt.map((v,i)=>v+(p[i]-v)*ar):p;
     fast=fast===null?tot:fast+(tot-fast)*af;
     showLevel(10*Math.log10(fast+1e-20)+cal);
   }
@@ -223,41 +225,54 @@ function draw(){
   const dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
   if(cv.width!==W*dpr||cv.height!==H*dpr){cv.width=W*dpr;cv.height=H*dpr}
   g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
-  if(!avg)return;
-  const db=avg.map(v=>10*Math.log10(v+1e-20));
-  const ref=db.slice(BANDS.indexOf(100),BANDS.indexOf(10000)+1);
-  const m=ref.reduce((a,b)=>a+b,0)/ref.length;
-  const top=16,bot=24,L=32,R=10,h=H-top-bot,w=W-L-R,range=18,y0=top+h/2;
-  // ±3dB 허용 띠
-  g.fillStyle='rgba(255,233,138,.08)';g.fillRect(L,y0-3/range*h/2,w,6/range*h/2);
+  if(!avg||!rt)return;
+  // 밴드별 dB (보정값 포함)
+  const A=avg.map(v=>10*Math.log10(v+1e-20)+cal), R=rt.map(v=>10*Math.log10(v+1e-20)+cal);
+  // 세로 눈금: 위쪽 끝을 10dB 단위로 자동, 범위 60dB (자주 흔들리지 않게)
+  const mx=Math.max(...A,...R);
+  const want=Math.ceil((mx+4)/10)*10;
+  if(yTop===null||want>yTop||want<yTop-10)yTop=want;
+  const span=60,yBot=yTop-span;
+  const top=14,bot=24,L=34,Rm=10,h=H-top-bot,w=W-L-Rm;
+  const Y=v=>top+(1-(Math.max(yBot,Math.min(yTop,v))-yBot)/span)*h;
   g.font='500 10px "JetBrains Mono",Menlo,monospace';g.textAlign='right';g.textBaseline='middle';
-  for(let d=-18;d<=18;d+=6){const y=y0-d/range*h/2;
-    g.strokeStyle=d===0?col['--y']:col['--line'];g.globalAlpha=d===0?.6:1;g.lineWidth=1;
-    g.beginPath();g.moveTo(L,y+.5);g.lineTo(W-R,y+.5);g.stroke();g.globalAlpha=1;
-    g.fillStyle=col['--dim'];g.fillText((d>0?'+':'')+d,L-6,y)}
-  const bw=w/BANDS.length;
+  for(let v=yBot;v<=yTop;v+=10){const y=Math.round(Y(v))+.5;
+    g.strokeStyle=col['--line'];g.lineWidth=1;g.beginPath();g.moveTo(L,y);g.lineTo(W-Rm,y);g.stroke();
+    g.fillStyle=col['--dim'];g.fillText(v,L-6,y)}
+  const bw=w/BANDS.length,cx=i=>L+i*bw+bw/2;
+  // 실시간 막대
   BANDS.forEach((c,i)=>{
-    const d=Math.max(-range,Math.min(range,db[i]-m));
-    const x=L+i*bw+bw*.14,bwi=bw*.72,y1=y0-d/range*h/2;
-    g.fillStyle=Math.abs(d)<=3?col['--y']:d>0?col['--hi']:col['--lo'];
-    g.globalAlpha=c<80?.3:1;
-    g.fillRect(x,Math.min(y0,y1),bwi,Math.max(2,Math.abs(y1-y0)));
-    g.globalAlpha=1;
-    if(LBL[c]){g.fillStyle=col['--dim'];g.textAlign='center';g.textBaseline='top';g.fillText(LBL[c],x+bwi/2,H-bot+8)}
+    const x=L+i*bw+bw*.12,bwi=bw*.76,y=Y(R[i]);
+    g.globalAlpha=c<125?.3:.9;g.fillStyle=col['--y'];
+    g.fillRect(x,y,bwi,top+h-y);g.globalAlpha=1;
+    if(LBL[c]){g.fillStyle=col['--dim'];g.textAlign='center';g.textBaseline='top';g.fillText(LBL[c],cx(i),H-bot+8)}
   });
-  if(frozen){g.fillStyle=col['--y'];g.textAlign='left';g.textBaseline='top';g.font='700 11px "JetBrains Mono",Menlo,monospace';g.fillText('■ 고정됨',L+6,top)}
+  // 평평한 기준(점선) = 125Hz~10kHz 평균값
+  const i0=BANDS.indexOf(125),i1=BANDS.indexOf(10000);
+  const ref=A.slice(i0,i1+1).reduce((a,b)=>a+b,0)/(i1-i0+1),yr=Y(ref);
+  g.setLineDash([5,4]);g.strokeStyle=col['--text'];g.globalAlpha=.45;g.lineWidth=1;
+  g.beginPath();g.moveTo(L,yr);g.lineTo(W-Rm,yr);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // 평균 선(흰색)
+  g.strokeStyle=col['--text'];g.lineWidth=2.5;g.lineJoin='round';g.beginPath();
+  A.forEach((v,i)=>{const x=cx(i),y=Y(v);i?g.lineTo(x,y):g.moveTo(x,y)});g.stroke();
+  // 범례
+  g.font='600 10px "JetBrains Mono",Menlo,monospace';g.textAlign='left';g.textBaseline='top';
+  g.fillStyle=col['--y'];g.fillRect(L+6,top+4,8,8);g.fillText('실시간',L+18,top+3);
+  g.fillStyle=col['--text'];g.fillRect(L+70,top+7,12,2.5);g.fillText('평균 '+tau+'초',L+86,top+3);
+  if(frozen){g.fillStyle=col['--hi'];g.fillText('■ 고정됨',L+160,top+3)}
 }
 
 document.addEventListener("touchend",()=>{if(running&&ctx&&ctx.state!=="running")ctx.resume()});
 $('go').onclick=()=>running?stop():start();
 $('spd').onclick=()=>{tau=tau===5?1:tau===1?15:5;$('spd').textContent='평균 '+tau+'초'};
 $('frz').onclick=()=>{frozen=!frozen;$('frz').classList.toggle('on',frozen);$('frz').textContent=frozen?'해제':'고정'};
-$('rst').onclick=()=>{avg=null;fast=null};
+$('rst').onclick=()=>{avg=null;rt=null;fast=null;yTop=null};
 function setT(d){target=Math.max(70,Math.min(110,target+d));store.set('target',target);paintGauge()}
 function setC(d){cal+=d;calSet=true;store.set('cal',cal);store.set('calSet',true);paintGauge()}
 $('tUp').onclick=()=>setT(1);$('tDn').onclick=()=>setT(-1);
 $('cUp').onclick=()=>setC(1);$('cDn').onclick=()=>setC(-1);
 addEventListener('resize',()=>{if(!running&&avg)draw()});
+$('spd').addEventListener('click',()=>{if(!running&&avg)draw()});
 </script>
 </body>
 </html>
