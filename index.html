@@ -53,6 +53,8 @@ header{display:flex;align-items:center;justify-content:space-between}
 .mark{position:absolute;top:2px;width:2px;height:22px;background:var(--y);transform:translateX(-1px)}
 .ticks{position:absolute;left:0;right:0;top:22px;font-family:var(--mono);font-size:10px;color:var(--dim)}
 .ticks span{position:absolute;transform:translateX(-50%)}
+[hidden]{display:none!important}
+#dbg{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center}
 .cal-warn{font-size:12px;color:var(--hi);line-height:1.4}
 
 /* RTA */
@@ -103,6 +105,7 @@ button.on{background:var(--text);color:var(--bg)}
   <div class="overlay" id="msg"><div>콘솔에서 <b>핑크노이즈</b>를 내보내고<br>폰 마이크(아래쪽)를 <b>스피커 쪽</b>으로 향한 뒤<br><b>시작</b>을 누르세요.</div><div>막대가 평평할수록 좋은 상태예요.</div></div>
 </section>
 
+<div id="dbg">오디오: 대기</div>
 <div class="controls">
   <button id="go">시작</button>
   <button id="spd">평균 5초</button>
@@ -123,7 +126,7 @@ const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 let target=store.get('target',95),cal=store.get('cal',120),calSet=store.get('calSet',false);
-let src=null,mute=null,ctx,an,buf,bins,avg=null,fast=null,tau=5,frozen=false,running=false,lastT=0,wake=null,stream=null;
+let dbgT=0,src=null,mute=null,ctx,an,buf,bins,avg=null,fast=null,tau=5,frozen=false,running=false,lastT=0,wake=null,stream=null;
 const cv=$('cv'),g=cv.getContext('2d');
 const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const col={};['--y','--hi','--lo','--dim','--line','--text','--panel2'].forEach(k=>col[k]=C(k));
@@ -146,8 +149,8 @@ async function start(){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     const resuming=ctx.resume();
     stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
-    await resuming;
-    if(ctx.state!=='running')await ctx.resume();
+    await Promise.race([resuming,new Promise(r=>setTimeout(r,800))]);
+    if(ctx.state!=="running")ctx.resume();
     an=ctx.createAnalyser();an.fftSize=16384;an.smoothingTimeConstant=0;an.minDecibels=-140;an.maxDecibels=0;
     src=ctx.createMediaStreamSource(stream);   // 전역에 보관 (사파리가 지우지 않게)
     src.connect(an);
@@ -163,6 +166,7 @@ async function start(){
     lastT=performance.now();requestAnimationFrame(loop);
   }catch(e){
     $('msg').hidden=false;
+    if(ctx){try{ctx.close()}catch(_){}}
     $('msg').innerHTML='<div><b>마이크를 쓸 수 없어요.</b><br>설정 → 앱 → Safari → 마이크를<br>"허용"으로 바꾸고 새로고침하세요.</div><div style="font-family:var(--mono);font-size:11px">'+e.name+'</div>';
   }
 }
@@ -180,6 +184,8 @@ function loop(t){
   const dt=Math.min(.2,(t-lastT)/1000);lastT=t;
   if(!frozen){
     an.getFloatFrequencyData(buf);
+    let pk=-Infinity;for(let i=1;i<buf.length;i++)if(buf[i]>pk)pk=buf[i];
+    if(t-(dbgT||0)>300){dbgT=t;$("dbg").textContent="오디오: "+ctx.state+" · "+ctx.sampleRate+"Hz · 입력 최대 "+(isFinite(pk)?pk.toFixed(0)+"dB":"없음");}
     // 소리가 안 들어오면(전부 -무한대) 알려주고 화면을 한 번 누르면 다시 깨우기
     if(!isFinite(buf[200])){
       if(ctx.state!=='running'){$('stateTxt').textContent='화면을 한 번 누르세요';}
