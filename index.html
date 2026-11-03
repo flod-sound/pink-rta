@@ -2,85 +2,197 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="핑크 RTA">
-<title>핑크 RTA</title>
+<meta name="apple-mobile-web-app-title" content="Flo.D RTA">
+<meta name="theme-color" content="#07080b">
+<title>Flo.D Pink RTA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-:root{--bg:#0e1013;--panel:#171a1f;--fg:#e8eaed;--dim:#7d8590;--grid:#262b32;--ok:#4ade80;--hi:#fb923c;--lo:#60a5fa;}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"Apple SD Gothic Neo",sans-serif;-webkit-user-select:none;user-select:none}
-body{display:flex;flex-direction:column;gap:10px;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
-header{display:flex;justify-content:space-between;align-items:baseline}
-h1{font-size:17px;margin:0;font-weight:600}
-#lvl{font-variant-numeric:tabular-nums;font-size:26px;font-weight:700}
-#lvl small{font-size:13px;color:var(--dim);font-weight:400}
-#stage{flex:1;min-height:0;background:var(--panel);border-radius:10px;position:relative}
+/* Flo.D: 블랙 & 옐로, 공연장 어둠 속에서 한눈에 읽히는 계기판 */
+:root{
+  --bg:#07080b;--panel:#0f1116;--panel2:#151820;--line:#232733;
+  --text:#f2f3f5;--dim:#8a90a0;
+  --y:#ffd400;--y2:#ffe866;--hi:#ff9f1a;--lo:#5fd4ff;--bad:#ff4d4d;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --sans:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-user-select:none;user-select:none;overflow:hidden}
+body{display:flex;flex-direction:column;gap:12px;
+  padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+
+header{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:baseline;gap:10px}
+.logo{font-family:var(--mono);font-weight:700;font-size:20px;letter-spacing:.02em;color:var(--y)}
+.logo i{font-style:normal;color:var(--text)}
+.app{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--dim)}
+.state{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--dim);display:flex;align-items:center;gap:6px}
+.state b{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.state.live b{background:var(--y);box-shadow:0 0 8px var(--y)}
+.state.live{color:var(--y)}
+
+/* 레벨 패널 */
+.level{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.lv-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.spl{font-family:var(--mono);font-weight:700;font-size:64px;line-height:.9;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.spl small{font-size:15px;font-weight:500;color:var(--dim);letter-spacing:0;margin-left:6px}
+.verdict{text-align:right;font-size:15px;font-weight:700;line-height:1.3}
+.verdict span{display:block;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--dim);letter-spacing:.1em}
+.v-ok{color:var(--y)} .v-up{color:var(--lo)} .v-down{color:var(--hi)}
+.gauge{position:relative;height:30px}
+.track{position:absolute;left:0;right:0;top:8px;height:10px;border-radius:5px;background:var(--panel2);overflow:hidden}
+.zone{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--y) 28%,transparent)}
+.fill{position:absolute;left:0;top:0;bottom:0;background:var(--dim);border-radius:5px;transition:width .12s linear}
+.mark{position:absolute;top:2px;width:2px;height:22px;background:var(--y);transform:translateX(-1px)}
+.ticks{position:absolute;left:0;right:0;top:22px;font-family:var(--mono);font-size:10px;color:var(--dim)}
+.ticks span{position:absolute;transform:translateX(-50%)}
+.cal-warn{font-size:12px;color:var(--hi);line-height:1.4}
+
+/* RTA */
+.rta{flex:1;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;position:relative;overflow:hidden}
 canvas{width:100%;height:100%;display:block}
-#msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--dim);line-height:1.6;font-size:15px}
-.row{display:flex;gap:8px}
-button{flex:1;font:inherit;font-size:16px;font-weight:600;padding:14px 8px;border-radius:10px;border:0;background:var(--panel);color:var(--fg)}
-button.on{background:var(--fg);color:var(--bg)}
-button#go{background:var(--ok);color:#06210f}
-button:focus-visible{outline:2px solid var(--fg)}
-.hint{font-size:12px;color:var(--dim);text-align:center}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;color:var(--dim);font-size:14px;line-height:1.7}
+.overlay b{color:var(--text)}
+
+/* 버튼 */
+.controls{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));gap:8px}
+button{font:inherit;font-size:15px;font-weight:700;padding:15px 6px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text)}
+button:active{transform:scale(.97)}
+button:focus-visible{outline:2px solid var(--y);outline-offset:2px}
+#go{background:var(--y);color:#111;border-color:var(--y)}
+#go.stop{background:var(--panel2);color:var(--y);border-color:var(--y)}
+button.on{background:var(--text);color:var(--bg)}
+
+.settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stepper{display:flex;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stepper button{border:0;border-radius:0;background:none;padding:10px 0;width:42px;font-size:20px;color:var(--y);font-family:var(--mono)}
+.stepper div{flex:1;text-align:center;line-height:1.2}
+.stepper label{display:block;font-size:10px;color:var(--dim);letter-spacing:.08em}
+.stepper output{font-family:var(--mono);font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+@media (max-height:700px){.spl{font-size:50px}}
 </style>
 </head>
 <body>
-<header><h1>핑크 RTA</h1><div id="lvl">-- <small>dBFS</small></div></header>
-<div id="stage"><canvas id="cv"></canvas><div id="msg">콘솔에서 핑크노이즈를 내보내고<br>스피커 쪽으로 폰 마이크를 향한 뒤<br>아래 <b>시작</b>을 누르세요.<br><br>막대가 평평하면 좋은 상태예요.</div></div>
-<div class="row">
-<button id="go">시작</button>
-<button id="spd">평균 5초</button>
-<button id="frz">고정</button>
-<button id="rst">초기화</button>
+<header>
+  <div class="brand"><span class="logo">Flo<i>.</i>D</span><span class="app">PINK RTA</span></div>
+  <div class="state" id="state"><b></b><span id="stateTxt">대기</span></div>
+</header>
+
+<section class="level">
+  <div class="lv-top">
+    <div class="spl" id="spl">--<small>dB</small></div>
+    <div class="verdict" id="verdict"><span>목표 95 dB</span>시작을 누르세요</div>
+  </div>
+  <div class="gauge">
+    <div class="track"><div class="zone" id="zone"></div><div class="fill" id="fill"></div></div>
+    <div class="mark" id="mark"></div>
+    <div class="ticks" id="ticks"></div>
+  </div>
+  <div class="cal-warn" id="calWarn">보정 전이에요. 소음계와 같이 재서 아래 <b>보정</b> 값을 맞춰야 dB가 정확해요.</div>
+</section>
+
+<section class="rta">
+  <canvas id="cv"></canvas>
+  <div class="overlay" id="msg"><div>콘솔에서 <b>핑크노이즈</b>를 내보내고<br>폰 마이크(아래쪽)를 <b>스피커 쪽</b>으로 향한 뒤<br><b>시작</b>을 누르세요.</div><div>막대가 평평할수록 좋은 상태예요.</div></div>
+</section>
+
+<div class="controls">
+  <button id="go">시작</button>
+  <button id="spd">평균 5초</button>
+  <button id="frz">고정</button>
+  <button id="rst">초기화</button>
 </div>
-<div class="hint">막대 = 평균 대비 ±12dB · 파랑: 부족 · 주황: 넘침 · 80Hz 아래는 폰 마이크가 약해서 참고만</div>
+
+<div class="settings">
+  <div class="stepper"><button id="tDn" aria-label="목표 낮추기">−</button><div><label>목표 dB</label><output id="tVal">95</output></div><button id="tUp" aria-label="목표 높이기">+</button></div>
+  <div class="stepper"><button id="cDn" aria-label="보정 낮추기">−</button><div><label>보정</label><output id="cVal">+120</output></div><button id="cUp" aria-label="보정 높이기">+</button></div>
+</div>
+
 <script>
 const BANDS=[31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000];
 const LBL={31.5:'31',63:'63',125:'125',250:'250',500:'500',1000:'1k',2000:'2k',4000:'4k',8000:'8k',16000:'16k'};
-let ctx,an,buf,sr,bins,avg=null,tau=5,frozen=false,running=false,lastT=0,wake=null;
-const cv=document.getElementById('cv'),g=cv.getContext('2d');
+const GMIN=70,GMAX=110,TOL=2;
 const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
-function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+let target=store.get('target',95),cal=store.get('cal',120),calSet=store.get('calSet',false);
+let ctx,an,buf,bins,avg=null,fast=null,tau=5,frozen=false,running=false,lastT=0,wake=null,stream=null;
+const cv=$('cv'),g=cv.getContext('2d');
+const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const col={};['--y','--hi','--lo','--dim','--line','--text','--panel2'].forEach(k=>col[k]=C(k));
+
+function pct(v){return Math.max(0,Math.min(100,(v-GMIN)/(GMAX-GMIN)*100))}
+function paintGauge(){
+  $('tVal').textContent=target;
+  $('cVal').textContent=(cal>=0?'+':'')+cal;
+  $('mark').style.left=pct(target)+'%';
+  $('zone').style.left=pct(target-TOL)+'%';$('zone').style.width=(pct(target+TOL)-pct(target-TOL))+'%';
+  $('ticks').innerHTML=[70,80,90,100,110].map(v=>`<span style="left:${pct(v)}%">${v}</span>`).join('');
+  $('calWarn').hidden=calSet;
+  if(!running)$('verdict').innerHTML=`<span>목표 ${target} dB</span>시작을 누르세요`;
+}
+paintGauge();
 
 async function start(){
   try{
-    const s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     await ctx.resume();
-    sr=ctx.sampleRate;
-    an=ctx.createAnalyser();an.fftSize=16384;an.smoothingTimeConstant=0;an.minDecibels=-140;
-    ctx.createMediaStreamSource(s).connect(an);
+    an=ctx.createAnalyser();an.fftSize=16384;an.smoothingTimeConstant=0;an.minDecibels=-140;an.maxDecibels=0;
+    ctx.createMediaStreamSource(stream).connect(an);
     buf=new Float32Array(an.frequencyBinCount);
-    bins=BANDS.map(c=>{const lo=c/Math.pow(2,1/6),hi=c*Math.pow(2,1/6),f=sr/an.fftSize;
-      return [Math.max(1,Math.round(lo/f)),Math.max(1,Math.round(hi/f)-1)]});
-    bins=bins.map(([a,b])=>[a,Math.max(a,b)]);
-    $('msg').hidden=true;running=true;$('go').textContent='정지';$('go').classList.remove('on');
+    const f=ctx.sampleRate/an.fftSize;
+    bins=BANDS.map(c=>{const lo=Math.max(1,Math.round(c/Math.SQRT2**(1/3)/f)),hi=Math.round(c*Math.SQRT2**(1/3)/f)-1;return[lo,Math.max(lo,hi)]});
+    $('msg').hidden=true;running=true;
+    $('go').textContent='정지';$('go').classList.add('stop');
+    $('state').classList.add('live');$('stateTxt').textContent='측정 중';
     try{wake=await navigator.wakeLock.request('screen')}catch(e){}
     lastT=performance.now();requestAnimationFrame(loop);
   }catch(e){
     $('msg').hidden=false;
-    $('msg').innerHTML='마이크를 쓸 수 없어요.<br>설정 → Safari → 마이크 를 "허용"으로 바꾸고<br>페이지를 새로고침하세요.<br><small>'+e.name+'</small>';
+    $('msg').innerHTML='<div><b>마이크를 쓸 수 없어요.</b><br>설정 → 앱 → Safari → 마이크를<br>"허용"으로 바꾸고 새로고침하세요.</div><div style="font-family:var(--mono);font-size:11px">'+e.name+'</div>';
   }
 }
-function stop(){running=false;if(ctx)ctx.close();$('go').textContent='시작';if(wake)wake.release().catch(()=>{})}
+function stop(){
+  running=false;
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  if(ctx)ctx.close();
+  $('go').textContent='시작';$('go').classList.remove('stop');
+  $('state').classList.remove('live');$('stateTxt').textContent='대기';
+  if(wake){wake.release().catch(()=>{});wake=null}
+}
 
 function loop(t){
   if(!running)return;
-  const dt=(t-lastT)/1000;lastT=t;
+  const dt=Math.min(.2,(t-lastT)/1000);lastT=t;
   if(!frozen){
     an.getFloatFrequencyData(buf);
-    const a=1-Math.exp(-dt/tau);
-    const p=bins.map(([lo,hi])=>{let s=0;for(let i=lo;i<=hi;i++)s+=Math.pow(10,buf[i]/10);return s});
+    const p=bins.map(([lo,hi])=>{let s=0;for(let i=lo;i<=hi;i++)s+=10**(buf[i]/10);return s});
+    const a=1-Math.exp(-dt/tau),af=1-Math.exp(-dt/0.6);
+    const tot=p.reduce((x,y)=>x+y,0);
     avg=avg?avg.map((v,i)=>v+(p[i]-v)*a):p;
-    // 처음엔 빨리 채우기
-    if(avg._n===undefined)avg._n=0;
+    fast=fast===null?tot:fast+(tot-fast)*af;
+    showLevel(10*Math.log10(fast+1e-20)+cal);
   }
   draw();
   requestAnimationFrame(loop);
+}
+
+let lastTxt=0;
+function showLevel(db){
+  $('fill').style.width=pct(db)+'%';
+  const d=db-target;
+  $('fill').style.background=Math.abs(d)<=TOL?col['--y']:d>0?col['--hi']:col['--lo'];
+  const now=performance.now();if(now-lastTxt<250)return;lastTxt=now;
+  $('spl').innerHTML=Math.round(db)+'<small>dB</small>';
+  const v=$('verdict');
+  if(Math.abs(d)<=TOL){v.className='verdict v-ok';v.innerHTML=`<span>목표 ${target} dB</span>딱 좋아요`}
+  else if(d<0){v.className='verdict v-up';v.innerHTML=`<span>목표 ${target} dB</span>${Math.round(-d)} dB 올리세요`}
+  else{v.className='verdict v-down';v.innerHTML=`<span>목표 ${target} dB</span>${Math.round(d)} dB 내리세요`}
 }
 
 function draw(){
@@ -89,35 +201,38 @@ function draw(){
   g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
   if(!avg)return;
   const db=avg.map(v=>10*Math.log10(v+1e-20));
-  // 기준: 100Hz~10kHz 막대의 평균(dB)
-  const ref=db.slice(5,BANDS.indexOf(10000)+1);
+  const ref=db.slice(BANDS.indexOf(100),BANDS.indexOf(10000)+1);
   const m=ref.reduce((a,b)=>a+b,0)/ref.length;
-  // 전체 레벨
-  const tot=10*Math.log10(avg.reduce((a,b)=>a+b,0));
-  $('lvl').innerHTML=(tot+ 0).toFixed(0)+' <small>dBFS</small>';
-  const top=18,bot=22,L=30,R=6,h=H-top-bot,w=W-L-R,range=12;
-  g.font='11px -apple-system,sans-serif';g.textAlign='right';g.textBaseline='middle';
-  for(let d=-12;d<=12;d+=6){const y=top+h/2-d/range*h/2;
-    g.strokeStyle=d===0?css('--dim'):css('--grid');g.lineWidth=d===0?1.5:1;
-    g.beginPath();g.moveTo(L,y);g.lineTo(W-R,y);g.stroke();
-    g.fillStyle=css('--dim');g.fillText((d>0?'+':'')+d,L-4,y)}
+  const top=16,bot=24,L=32,R=10,h=H-top-bot,w=W-L-R,range=12,y0=top+h/2;
+  // ±3dB 허용 띠
+  g.fillStyle='rgba(255,212,0,.07)';g.fillRect(L,y0-3/range*h/2,w,6/range*h/2);
+  g.font='500 10px "JetBrains Mono",Menlo,monospace';g.textAlign='right';g.textBaseline='middle';
+  for(let d=-12;d<=12;d+=6){const y=y0-d/range*h/2;
+    g.strokeStyle=d===0?col['--y']:col['--line'];g.globalAlpha=d===0?.6:1;g.lineWidth=1;
+    g.beginPath();g.moveTo(L,y+.5);g.lineTo(W-R,y+.5);g.stroke();g.globalAlpha=1;
+    g.fillStyle=col['--dim'];g.fillText((d>0?'+':'')+d,L-6,y)}
   const bw=w/BANDS.length;
   BANDS.forEach((c,i)=>{
-    let d=Math.max(-range,Math.min(range,db[i]-m));
-    const x=L+i*bw+bw*0.12,y0=top+h/2,y1=y0-d/range*h/2;
-    const col=Math.abs(d)<=3?css('--ok'):d>0?css('--hi'):css('--lo');
-    g.globalAlpha=c<80?0.35:1;g.fillStyle=col;
-    g.fillRect(x,Math.min(y0,y1),bw*0.76,Math.max(2,Math.abs(y1-y0)));
+    const d=Math.max(-range,Math.min(range,db[i]-m));
+    const x=L+i*bw+bw*.14,bwi=bw*.72,y1=y0-d/range*h/2;
+    g.fillStyle=Math.abs(d)<=3?col['--y']:d>0?col['--hi']:col['--lo'];
+    g.globalAlpha=c<80?.3:1;
+    g.fillRect(x,Math.min(y0,y1),bwi,Math.max(2,Math.abs(y1-y0)));
     g.globalAlpha=1;
-    if(LBL[c]){g.fillStyle=css('--dim');g.textAlign='center';g.textBaseline='top';g.fillText(LBL[c],x+bw*0.38,H-bot+6)}
+    if(LBL[c]){g.fillStyle=col['--dim'];g.textAlign='center';g.textBaseline='top';g.fillText(LBL[c],x+bwi/2,H-bot+8)}
   });
-  if(frozen){g.fillStyle=css('--fg');g.textAlign='left';g.textBaseline='top';g.fillText('고정됨',L+6,top+4)}
+  if(frozen){g.fillStyle=col['--y'];g.textAlign='left';g.textBaseline='top';g.font='700 11px "JetBrains Mono",Menlo,monospace';g.fillText('■ 고정됨',L+6,top)}
 }
 
 $('go').onclick=()=>running?stop():start();
 $('spd').onclick=()=>{tau=tau===5?1:tau===1?15:5;$('spd').textContent='평균 '+tau+'초'};
 $('frz').onclick=()=>{frozen=!frozen;$('frz').classList.toggle('on',frozen);$('frz').textContent=frozen?'해제':'고정'};
-$('rst').onclick=()=>{avg=null};
+$('rst').onclick=()=>{avg=null;fast=null};
+function setT(d){target=Math.max(70,Math.min(110,target+d));store.set('target',target);paintGauge()}
+function setC(d){cal+=d;calSet=true;store.set('cal',cal);store.set('calSet',true);paintGauge()}
+$('tUp').onclick=()=>setT(1);$('tDn').onclick=()=>setT(-1);
+$('cUp').onclick=()=>setC(1);$('cDn').onclick=()=>setC(-1);
+addEventListener('resize',()=>{if(!running&&avg)draw()});
 </script>
 </body>
 </html>
