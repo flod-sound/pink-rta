@@ -6,16 +6,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Flo.D RTA">
-<meta name="theme-color" content="#07080b">
+<meta name="theme-color" content="#070809">
 <title>Flo.D Pink RTA</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* Flo.D: 블랙 & 옐로, 공연장 어둠 속에서 한눈에 읽히는 계기판 */
 :root{
-  --bg:#07080b;--panel:#0f1116;--panel2:#151820;--line:#232733;
-  --text:#f2f3f5;--dim:#8a90a0;
-  --y:#ffd400;--y2:#ffe866;--hi:#ff9f1a;--lo:#5fd4ff;--bad:#ff4d4d;
+  --bg:#070809;--panel:#101215;--panel2:#1b1e24;--line:#2c3038;
+  --text:#f2f2f0;--dim:#8b9099;
+  --y:#ffe98a;--y2:#7a6f42;--hi:#ff9a1f;--lo:#5fd4ff;--bad:#ff4d4d;
   --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
   --sans:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   color-scheme:dark;
@@ -26,7 +28,8 @@ body{display:flex;flex-direction:column;gap:12px;
   padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 
 header{display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:baseline;gap:10px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark-logo{width:28px;height:28px;display:block}
 .logo{font-family:var(--mono);font-weight:700;font-size:20px;letter-spacing:.02em;color:var(--y)}
 .logo i{font-style:normal;color:var(--text)}
 .app{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--dim)}
@@ -63,7 +66,7 @@ canvas{width:100%;height:100%;display:block}
 button{font:inherit;font-size:15px;font-weight:700;padding:15px 6px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text)}
 button:active{transform:scale(.97)}
 button:focus-visible{outline:2px solid var(--y);outline-offset:2px}
-#go{background:var(--y);color:#111;border-color:var(--y)}
+#go{background:var(--y);color:#0b0b0b;border-color:var(--y)}
 #go.stop{background:var(--panel2);color:var(--y);border-color:var(--y)}
 button.on{background:var(--text);color:var(--bg)}
 
@@ -78,7 +81,7 @@ button.on{background:var(--text);color:var(--bg)}
 </head>
 <body>
 <header>
-  <div class="brand"><span class="logo">Flo<i>.</i>D</span><span class="app">PINK RTA</span></div>
+  <div class="brand"><img class="mark-logo" src="logo.png" alt=""><span class="logo">Flo<i>.</i>D</span><span class="app">PINK RTA</span></div>
   <div class="state" id="state"><b></b><span id="stateTxt">대기</span></div>
 </header>
 
@@ -205,7 +208,7 @@ function draw(){
   const m=ref.reduce((a,b)=>a+b,0)/ref.length;
   const top=16,bot=24,L=32,R=10,h=H-top-bot,w=W-L-R,range=12,y0=top+h/2;
   // ±3dB 허용 띠
-  g.fillStyle='rgba(255,212,0,.07)';g.fillRect(L,y0-3/range*h/2,w,6/range*h/2);
+  g.fillStyle='rgba(255,233,138,.08)';g.fillRect(L,y0-3/range*h/2,w,6/range*h/2);
   g.font='500 10px "JetBrains Mono",Menlo,monospace';g.textAlign='right';g.textBaseline='middle';
   for(let d=-12;d<=12;d+=6){const y=y0-d/range*h/2;
     g.strokeStyle=d===0?col['--y']:col['--line'];g.globalAlpha=d===0?.6:1;g.lineWidth=1;
