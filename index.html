@@ -225,11 +225,11 @@ function draw(){
   const db=avg.map(v=>10*Math.log10(v+1e-20));
   const ref=db.slice(BANDS.indexOf(100),BANDS.indexOf(10000)+1);
   const m=ref.reduce((a,b)=>a+b,0)/ref.length;
-  const top=16,bot=24,L=32,R=10,h=H-top-bot,w=W-L-R,range=12,y0=top+h/2;
+  const top=16,bot=24,L=32,R=10,h=H-top-bot,w=W-L-R,range=18,y0=top+h/2;
   // ±3dB 허용 띠
   g.fillStyle='rgba(255,233,138,.08)';g.fillRect(L,y0-3/range*h/2,w,6/range*h/2);
   g.font='500 10px "JetBrains Mono",Menlo,monospace';g.textAlign='right';g.textBaseline='middle';
-  for(let d=-12;d<=12;d+=6){const y=y0-d/range*h/2;
+  for(let d=-18;d<=18;d+=6){const y=y0-d/range*h/2;
     g.strokeStyle=d===0?col['--y']:col['--line'];g.globalAlpha=d===0?.6:1;g.lineWidth=1;
     g.beginPath();g.moveTo(L,y+.5);g.lineTo(W-R,y+.5);g.stroke();g.globalAlpha=1;
     g.fillStyle=col['--dim'];g.fillText((d>0?'+':'')+d,L-6,y)}
