@@ -10,6 +10,7 @@
 <title>Flo.D Pink RTA</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
@@ -65,7 +66,7 @@ header{display:flex;align-items:center;gap:10px}
 
 /* 메인 패널 */
 .main{flex:1;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);padding:4px;gap:4px;border-bottom:1px solid var(--line)}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);padding:4px;gap:4px;border-bottom:1px solid var(--line)}
 .tabs button{padding:9px 0;border-radius:10px;font-size:14px;font-weight:700;color:var(--dim)}
 .tabs button[aria-selected="true"]{background:var(--panel2);color:var(--y)}
 .view{flex:1;min-height:0;display:flex;flex-direction:column}
@@ -123,6 +124,52 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .sheet .close{padding:14px;border-radius:12px;background:var(--y);color:#0b0b0b;font-weight:800;font-size:16px}
 .note{font-size:12px;color:var(--dim);line-height:1.6;background:var(--panel2);border-radius:10px;padding:10px 12px}
 @media (max-height:720px){.big{font-size:46px}.tabs button{padding:7px 0}}
+
+/* EQ 탭 */
+.eqv{flex:1;min-height:0;display:flex;flex-direction:column}
+.eqg{position:relative;height:36%;min-height:120px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.eql{flex:1;min-height:0;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;-webkit-user-select:text;user-select:text}
+.eqc{background:var(--panel2);border-radius:12px;padding:10px 12px}
+.eqc h3{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.eqc h3 em{font-style:normal;font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:var(--y);color:var(--bg)}
+.eqc h3 span{font-weight:500;font-size:11px;color:var(--dim)}
+.peq{width:100%;border-collapse:collapse;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.peq th{font-size:10px;color:var(--dim);font-weight:500;text-align:right;padding:2px 6px;letter-spacing:.08em}
+.peq td{font-size:18px;font-weight:700;text-align:right;padding:6px;border-top:1px solid var(--line);white-space:nowrap}
+.peq td:first-child,.peq th:first-child{text-align:left;color:var(--dim);font-size:12px;width:22px;padding-left:0}
+.peq td small{display:block;font-size:9px;color:var(--dim);font-weight:500}
+.cut{color:var(--lo)} .boost{color:var(--hi)}
+.peq tr.off td{color:var(--dim);font-weight:500;font-size:12px}
+.geq{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.geq div{background:var(--panel);border-radius:8px;padding:7px 9px;display:flex;justify-content:space-between;align-items:baseline;font-size:15px;font-weight:700}
+.geq div span{color:var(--dim);font-weight:500;font-size:12px}
+.eqnote{font-size:12px;color:var(--dim);line-height:1.65;padding:4px 4px 8px}
+.eqnote b{color:var(--text)}
+/* EQ 설정 */
+.sheet .box{max-height:92vh;overflow-y:auto}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts .chip.on{background:var(--y);color:var(--bg)}
+.tgl{width:52px;height:30px;border-radius:15px;background:var(--panel2);position:relative;flex:0 0 auto;box-shadow:inset 0 0 0 1px var(--line)}
+.tgl::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:var(--dim);transition:left .15s}
+.tgl.on{background:var(--y)} .tgl.on::after{left:25px;background:var(--bg)}
+.row.sub{padding-left:14px;margin-top:-8px}
+.row.dis{opacity:.35;pointer-events:none}
+
+/* 가로 화면 */
+@media (orientation:landscape) and (max-height:560px){
+  body{display:grid;grid-template-columns:minmax(220px,30%) 1fr;grid-template-rows:auto auto 1fr auto auto;gap:8px 12px}
+  header{grid-column:1;grid-row:1}
+  .level{grid-column:1;grid-row:2;padding:10px 12px}
+  .main{grid-column:2;grid-row:1/6}
+  #go{grid-column:1;grid-row:4;padding:13px 0}
+  .foot{grid-column:1;grid-row:5;margin:0}
+  .big{font-size:40px}
+  .verdict{font-size:13px}
+  .eqv{flex-direction:row}
+  .eqg{height:auto;width:44%;border-bottom:0;border-right:1px solid var(--line)}
+  .sheet{align-items:center;justify-content:center}
+  .sheet .box{max-width:560px;border-radius:18px;border:1px solid var(--line)}
+}
 </style>
 </head>
 <body>
@@ -144,6 +191,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <section class="main">
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="rta">RTA</button>
+    <button role="tab" aria-selected="false" data-tab="eq">EQ</button>
     <button role="tab" aria-selected="false" data-tab="lvl">레벨</button>
     <button role="tab" aria-selected="false" data-tab="rec">기록 <span id="recN" class="mono" style="font-size:11px"></span></button>
   </div>
@@ -169,6 +217,19 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
     </div>
   </div>
 
+  <div class="view" id="v-eq" hidden>
+    <div class="eqv">
+      <div class="eqg"><canvas id="cv3"></canvas></div>
+      <div class="eql" id="eqList"></div>
+    </div>
+    <div class="tools">
+      <button class="chip acc" id="eqCon"><small>콘솔</small>TF</button>
+      <button class="chip" id="eqLock">값 고정</button>
+      <button class="chip" id="eqCurve"><small>목표</small>평탄</button>
+      <button class="chip" id="eqAgain">다시 계산</button>
+    </div>
+  </div>
+
   <div class="view" id="v-lvl" hidden>
     <div class="stats">
       <div><label>평균 Leq</label><output id="leq">--</output></div>
@@ -190,7 +251,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 </section>
 
 <button id="go">측정 시작</button>
-<div class="foot" id="dbg">v9</div>
+<div class="foot" id="dbg">v10</div>
 
 <div class="sheet" id="sheet" hidden>
   <div class="box">
@@ -204,8 +265,18 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
   </div>
 </div>
 
+<div class="sheet" id="eqSheet" hidden>
+  <div class="box">
+    <h2>콘솔 · 쓸 수 있는 EQ</h2>
+    <div class="opts" id="conPick"></div>
+    <div id="eqRows"></div>
+    <div class="note" id="conNote"></div>
+    <button class="close" id="eqClose">완료</button>
+  </div>
+</div>
+
 <script>
-const VER="v9";
+const VER="v10";
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -293,6 +364,7 @@ function loop(t){
     showLevel(L);
     if(t-lastHist>250){lastHist=t;lvlHist.push(L);if(lvlHist.length>240)lvlHist.shift();
       leqSum+=10**(L/10);leqN++;lmax=Math.max(lmax,L);lmin=Math.min(lmin,L);showStats()}
+    if(tab==='eq'&&!eqLock&&t-lastEq>1200){lastEq=t;runEQ()}
     if(t-lastDbg>1000){lastDbg=t;$('dbg').textContent=VER+' · '+ctx.sampleRate+'Hz · '+procTxt}
   }
   draw();
@@ -339,7 +411,7 @@ function fit(c,cx){const d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;
 const LBL=[[31.5,'31'],[63,'63'],[125,'125'],[250,'250'],[500,'500'],[1000,'1k'],[2000,'2k'],[4000,'4k'],[8000,'8k'],[16000,'16k']];
 const toDb=a=>a.map(v=>10*Math.log10(v+1e-20)+cal);
 let tab='rta';
-function draw(){if(tab==='rta')drawRTA();else if(tab==='lvl')drawLvl()}
+function draw(){if(tab==='rta')drawRTA();else if(tab==='lvl')drawLvl();else if(tab==='eq')drawEQ()}
 
 function drawRTA(){
   const [Wd,H]=fit(cv,g);
@@ -431,8 +503,8 @@ function snap(){
 // 이벤트
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
   tab=b.dataset.tab;document.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-selected',x===b));
-  $('v-rta').hidden=tab!=='rta';$('v-lvl').hidden=tab!=='lvl';$('v-rec').hidden=tab!=='rec';
-  if(tab==='rec')renderList();draw();
+  $('v-rta').hidden=tab!=='rta';$('v-lvl').hidden=tab!=='lvl';$('v-rec').hidden=tab!=='rec';$('v-eq').hidden=tab!=='eq';
+  if(tab==='rec')renderList();if(tab==='eq')runEQ(true);draw();
 });
 $('go').onclick=()=>running?stop():start();
 document.addEventListener('touchend',()=>{if(running&&ctx&&ctx.state!=='running')ctx.resume()});
@@ -455,7 +527,199 @@ const setC=d=>{cal+=d;calSet=true;store.set('cal',cal);store.set('calSet',true);
 $('tUp').onclick=()=>setT(1);$('tDn').onclick=()=>setT(-1);$('cUp').onclick=()=>setC(1);$('cDn').onclick=()=>setC(-1);
 addEventListener('resize',()=>draw());
 
-paintStatic();draw();
+/* =====================  EQ 추천  ===================== */
+// 콘솔 기본값 (대략값 · 설정에서 바꿀 수 있음)
+const CONS={
+  tf:  {name:'Yamaha TF',   n:4,g:18,qmin:.1,qmax:10,geqG:15,geqMax:15,mtx:true, note:'TF 그래픽 EQ는 Flex15 — 31밴드 중 한 번에 15밴드까지만 움직일 수 있어서 그 안에서 골라 드려요. TF1처럼 매트릭스가 없으면 매트릭스를 꺼 주세요.'},
+  clql:{name:'Yamaha CL/QL',n:4,g:18,qmin:.1,qmax:10,geqG:15,geqMax:31,mtx:true, note:'31밴드 GEQ 기준이에요. Flex15를 쓰면 GEQ 최대 밴드를 15로 바꾸세요.'},
+  x32: {name:'X32 / M32',   n:6,g:15,qmin:.3,qmax:10,geqG:15,geqMax:31,mtx:true, note:'메인·매트릭스 6밴드 PEQ, GEQ는 이펙트 랙 31밴드 기준이에요.'},
+  wing:{name:'WING',        n:6,g:15,qmin:.44,qmax:10,geqG:15,geqMax:31,mtx:true, note:'메인·매트릭스 PEQ 기준이에요.'},
+  sq:  {name:'A&H SQ',      n:4,g:15,qmin:.3,qmax:10,geqG:12,geqMax:31,mtx:true, note:'A&H는 폭을 옥타브로 보여 줄 때가 있어서 Q 밑에 옥타브 폭도 같이 적었어요.'},
+  dlive:{name:'A&H dLive',  n:4,g:15,qmin:.3,qmax:10,geqG:12,geqMax:31,mtx:true, note:'Q 밑에 옥타브 폭도 같이 적었어요.'},
+  si:  {name:'Soundcraft',  n:4,g:15,qmin:.3,qmax:10,geqG:12,geqMax:31,mtx:true, note:'Si/Vi 계열 4밴드 PEQ 기준이에요.'},
+  etc: {name:'기타 / 직접', n:4,g:15,qmin:.3,qmax:10,geqG:12,geqMax:31,mtx:true, note:'내 콘솔에 맞게 밴드 수와 GEQ 칸 수를 맞춰 주세요.'}
+};
+let eqc=Object.assign({con:'tf',main:true,mainN:4,mtx:true,mtxN:4,geq:true,geqMax:15,boost:3,curve:'flat',lo:125},store.get('eqc',{}));
+let eqLock=false,lastEq=0,eqRes=null;
+const saveEqc=()=>store.set('eqc',eqc);
+const FS=48000,GF=[];for(let k=0;;k++){const f=20*2**(k/24);if(f>20000)break;GF.push(f)}
+const CW=GF.map(f=>Math.cos(2*Math.PI*f/FS)),SW=GF.map(f=>Math.sin(2*Math.PI*f/FS)),C2=GF.map(f=>Math.cos(4*Math.PI*f/FS)),S2=GF.map(f=>Math.sin(4*Math.PI*f/FS));
+const ISO=[20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const r05=v=>Math.round(v*2)/2;
+// 피킹 EQ 응답 (dB) — 격자 전체
+function peqResp(f0,g,Q){
+  const out=new Float64Array(GF.length);if(!g)return out;
+  const A=10**(g/40),w0=2*Math.PI*f0/FS,al=Math.sin(w0)/(2*Q),c=Math.cos(w0);
+  const b0=1+al*A,b1=-2*c,b2=1-al*A,a0=1+al/A,a1=b1,a2=1-al/A;
+  for(let i=0;i<GF.length;i++){
+    const nr=b0+b1*CW[i]+b2*C2[i],ni=-(b1*SW[i]+b2*S2[i]),dr=a0+a1*CW[i]+a2*C2[i],di=-(a1*SW[i]+a2*S2[i]);
+    out[i]=10*Math.log10((nr*nr+ni*ni)/(dr*dr+di*di))}
+  return out}
+const gi=f=>clamp(Math.round(24*Math.log2(f/20)),0,GF.length-1);
+const at=(arr,f)=>{const x=24*Math.log2(f/20),i=clamp(Math.floor(x),0,GF.length-2),t=clamp(x-i,0,1);return arr[i]*(1-t)+arr[i+1]*t};
+function roundF(f){return f<100?Math.round(f):f<1000?Math.round(f/5)*5:f<10000?Math.round(f/50)*50:Math.round(f/100)*100}
+const fTxt=f=>f>=1000?(+(f/1000).toFixed(f>=10000?1:2)).toString()+'k':String(Math.round(f));
+const octOf=q=>2/Math.LN2*Math.asinh(1/(2*q));
+function curveT(f){
+  if(eqc.curve==='flat')return 0;
+  // 하우스 커브: 200Hz 아래 최대 +4dB, 4k 위로 −3dB까지 완만히
+  const lo=clamp(Math.log2(200/f)/Math.log2(200/50),0,1),hi=clamp(Math.log2(f/4000)/2,0,1);
+  return 4*lo-3*hi}
+function wsum(r,w){let s=0;for(let i=0;i<r.length;i++)s+=w[i]*r[i]*r[i];return s}
+
+function fitPEQ(r,n,qlo,qhi,gLim,boost,w){
+  const QS=[.3,.4,.5,.7,1,1.4,2,2.8,4,5.6,8].filter(q=>q>=qlo-1e-9&&q<=qhi+1e-9);if(!QS.length)QS.push(clamp(1,qlo,qhi));
+  const bands=[];
+  const tryB=(r,f0,g,q)=>{const p=peqResp(f0,g,q);let s=0;for(let i=0;i<r.length;i++){const d=r[i]-p[i];s+=w[i]*d*d}return s};
+  const sub=(r,b,sign)=>{const p=peqResp(b.f,b.g,b.q);for(let i=0;i<r.length;i++)r[i]-=sign*p[i]};
+  const e0=wsum(r,w);
+  for(let k=0;k<n;k++){
+    let bi=-1,bv=0;for(let i=0;i<r.length;i++)if(w[i]>0&&Math.abs(r[i])>bv){bv=Math.abs(r[i]);bi=i}
+    if(bv<1)break;
+    let best=null,be=wsum(r,w);
+    for(const q of QS)for(const gs of [.6,.8,1,1.2])for(let df=-2;df<=2;df++){
+      const j=clamp(bi+df*2,0,GF.length-1);if(!w[j])continue;const f0=roundF(GF[j]),g=r05(clamp(r[bi]*gs,-gLim,boost));if(Math.abs(g)<1)continue;
+      const e=tryB(r,f0,g,q);if(e<be){be=e;best={f:f0,g,q}}}
+    if(!best||wsum(r,w)-be<e0*.01)break;
+    bands.push(best);sub(r,best,1);
+  }
+  // 다듬기: 한 밴드씩 빼고 주변에서 다시 맞춤
+  for(let pass=0;pass<2;pass++)bands.forEach(b=>{
+    sub(r,b,-1);let best=b,be=tryB(r,b.f,b.g,b.q);const j0=gi(b.f);
+    for(const q of QS)for(const dg of [-1.5,-1,-.5,0,.5,1,1.5])for(let df=-2;df<=2;df++){
+      const jj=clamp(j0+df,0,GF.length-1);if(!w[jj]&&df)continue;const f0=roundF(GF[jj]),g=r05(clamp(b.g+dg,-gLim,boost));if(Math.abs(g)<1)continue;
+      const e=tryB(r,f0,g,q);if(e<be){be=e;best={f:f0,g,q}}}
+    Object.assign(b,best);sub(r,b,1)});
+  return bands.sort((a,b)=>a.f-b.f)}
+
+function fitGEQ(r,gLim,boost,maxN,w){
+  const GQ=4.3,act=ISO.map(f=>w[gi(f)]>0),tgt=ISO.map(f=>at(r,f));
+  const resps=g=>{const tot=new Float64Array(GF.length);g.forEach((v,k)=>{if(v){const p=peqResp(ISO[k],v,GQ);for(let i=0;i<tot.length;i++)tot[i]+=p[i]}});return tot};
+  let g=tgt.map((v,k)=>act[k]?clamp(v,-gLim,boost):0);
+  const iter=(keep,n)=>{for(let it=0;it<n;it++){const tot=resps(g);g=g.map((v,k)=>keep[k]?clamp(v+.6*(tgt[k]-at(tot,ISO[k])),-gLim,boost):0)}};
+  iter(act,6);
+  let keep=g.map(v=>Math.abs(v)>=1);
+  if(keep.filter(Boolean).length>maxN){const ord=g.map((v,k)=>[Math.abs(v),k]).sort((a,b)=>b[0]-a[0]).slice(0,maxN).map(x=>x[1]);keep=g.map((v,k)=>ord.includes(k))}
+  g=g.map((v,k)=>keep[k]?v:0);iter(keep,4);
+  g=g.map(v=>{v=r05(v);return Math.abs(v)<1?0:v});
+  return {g,resp:resps(g)}}
+
+function eqSource(){
+  if(avg)return {f:bands,db:toDb(avg),name:'지금 측정 중 (평균 '+tau+'초)'};
+  if(snaps.length){const s=snaps[0];return {f:s.f,db:s.db,name:'저장된 “'+s.name+'”'}}
+  return null}
+function computeEQ(src){
+  const C=CONS[eqc.con]||CONS.etc;
+  // 측정 → 격자, 1/6옥타브 스무딩
+  const lf=src.f.map(f=>Math.log2(f));
+  let M=GF.map(f=>{const x=Math.log2(f);if(x<=lf[0])return src.db[0];if(x>=lf[lf.length-1])return src.db[src.db.length-1];
+    let i=1;while(lf[i]<x)i++;const t=(x-lf[i-1])/(lf[i]-lf[i-1]);return src.db[i-1]*(1-t)+src.db[i]*t});
+  M=M.map((_,i)=>{let s=0,c=0;for(let k=-4;k<=4;k++){const j=i+k;if(j>=0&&j<M.length){s+=M[j];c++}}return s/c});
+  const fHi=12500,w=GF.map(f=>f>=eqc.lo*.94&&f<=fHi?1:0);
+  const e=M.map((v,i)=>v-curveT(GF[i]));
+  const mid=e.filter((v,i)=>GF[i]>=250&&GF[i]<=4000).sort((a,b)=>a-b),ref=mid[mid.length>>1];
+  const dev=e.map(v=>v-ref);
+  const want=dev.map((v,i)=>w[i]?clamp(-v,-12,eqc.boost):0);
+  const r=Float64Array.from(want);
+  const out=[];
+  const st=[];
+  if(eqc.mtx&&eqc.main){st.push(['mtx',eqc.mtxN,C.qmin,Math.min(2,C.qmax),'넓게 · 스피커·공간의 큰 모양']);st.push(['main',eqc.mainN,Math.max(C.qmin,1),C.qmax,'좁게 · 튀는 봉우리'])}
+  else if(eqc.main)st.push(['main',eqc.mainN,C.qmin,C.qmax,'전체 모양']);
+  else if(eqc.mtx)st.push(['mtx',eqc.mtxN,C.qmin,C.qmax,'전체 모양']);
+  st.forEach(([k,n,ql,qh,role])=>{out.push({k,role,n,bands:fitPEQ(r,n,ql,qh,C.g,eqc.boost,w)})});
+  if(eqc.geq){const gq=fitGEQ(r,C.geqG,eqc.boost,eqc.geqMax,w);for(let i=0;i<r.length;i++)r[i]-=gq.resp[i];out.push({k:'geq',role:st.length?'마무리 · 남은 잔굴곡':'전체 모양',g:gq.g})}
+  const applied=want.map((v,i)=>v-r[i]);
+  const after=dev.map((v,i)=>v+applied[i]);
+  const rms=a=>{let s=0,c=0;a.forEach((v,i)=>{if(w[i]){s+=v*v;c++}});return Math.sqrt(s/c)};
+  return {out,dev,applied,after,w,src:src.name,before:rms(dev),aft:rms(after)}}
+
+function runEQ(force){
+  if(eqLock&&!force&&eqRes)return;
+  if(eqLock&&eqRes){renderEQ();return}
+  const src=eqSource();eqRes=src?computeEQ(src):null;renderEQ();if(tab==='eq')drawEQ()}
+
+const NM={main:'메인 PEQ',mtx:'매트릭스 PEQ',geq:'그래픽 EQ'};
+function renderEQ(){
+  const el=$('eqList'),C=CONS[eqc.con]||CONS.etc;
+  $('eqCon').innerHTML='<small>콘솔</small>'+C.name;
+  $('eqLock').classList.toggle('on',eqLock);$('eqLock').textContent=eqLock?'🔒 고정됨':'값 고정';
+  $('eqCurve').innerHTML='<small>목표</small>'+(eqc.curve==='flat'?'평탄':'하우스');
+  if(!eqc.main&&!eqc.mtx&&!eqc.geq){el.innerHTML='<div class="empty">쓸 수 있는 EQ가 하나도 체크되지 않았어요.<br>아래 <b style="color:var(--y)">콘솔</b> 버튼에서 골라 주세요.</div>';return}
+  if(!eqRes){el.innerHTML='<div class="empty">핑크노이즈를 틀고 <b style="color:var(--y)">측정 시작</b>을 누르면<br>몇 초 뒤 여기에 EQ 값이 나와요.<br><br>콘솔 EQ는 먼저 <b>모두 0(플랫)</b>으로 두세요.</div>';return}
+  const sg=g=>`<span class="${g<0?'cut':'boost'}">${g>0?'+':''}${g.toFixed(1)}</span>`;
+  let h='';let no=0;
+  eqRes.out.forEach(o=>{
+    no++;
+    if(o.k==='geq'){
+      const on=o.g.map((g,k)=>[ISO[k],g]).filter(x=>x[1]);
+      h+=`<div class="eqc"><h3><em>${no}</em>${NM.geq}<span>${o.role} · ${on.length}밴드</span></h3>`+
+        (on.length?`<div class="geq">${on.map(([f,g])=>`<div><span>${fTxt(f)}</span>${sg(g)}</div>`).join('')}</div><div class="eqnote" style="padding:6px 0 0">나머지 밴드는 0 dB</div>`:`<div class="eqnote">손댈 곳 없음 — 모두 0 dB</div>`)+`</div>`;
+      return}
+    const rows=[];for(let i=0;i<o.n;i++){const b=o.bands[i];
+      rows.push(b?`<tr><td>${i+1}</td><td>${b.q}<small>${octOf(b.q).toFixed(2)} oct</small></td><td>${fTxt(b.f)}<small>Hz</small></td><td>${sg(b.g)}<small>dB</small></td></tr>`:`<tr class="off"><td>${i+1}</td><td colspan="3">사용 안 함 (0 dB)</td></tr>`)}
+    h+=`<div class="eqc"><h3><em>${no}</em>${NM[o.k]}<span>${o.role}</span></h3><table class="peq"><tr><th>#</th><th>Q</th><th>FREQ</th><th>GAIN</th></tr>${rows.join('')}</table></div>`;
+  });
+  h+=`<div class="eqnote">기준: ${eqRes.src} · 평탄도 <b>±${eqRes.before.toFixed(1)} dB → ±${eqRes.aft.toFixed(1)} dB</b> (예상)<br>`+
+    `① 콘솔 EQ를 모두 0으로 두고 측정 → ② <b>값 고정</b> → ③ 위 순서대로 입력 → ④ 고정 풀고 다시 재서 확인.<br>`+
+    `보정 범위 ${fTxt(eqc.lo)}Hz ~ 12.5kHz · 부스트는 최대 +${eqc.boost} dB까지만 (주로 깎아서 맞춰요).</div>`;
+  el.innerHTML=h;
+}
+const cv3=$('cv3'),g3=cv3.getContext('2d');
+function drawEQ(){
+  const [Wd,H]=fit(cv3,g3);
+  const top=22,bot=18,L=30,R=8,h=H-top-bot,w=Wd-L-R;
+  const X=f=>L+Math.log2(f/20)/Math.log2(1000)*w,span=12,Y=v=>top+(1-(clamp(v,-span,span)+span)/(2*span))*h;
+  g3.font='500 10px "JetBrains Mono",Menlo,monospace';g3.lineWidth=1;
+  if(eqRes){const x0=X(eqc.lo*.94),x1=X(12500);g3.fillStyle='rgba(255,255,255,.03)';g3.fillRect(x0,top,x1-x0,h)}
+  g3.textAlign='right';g3.textBaseline='middle';
+  for(let v=-12;v<=12;v+=6){const y=Math.round(Y(v))+.5;g3.strokeStyle=v?COL.line:COL.dim;g3.beginPath();g3.moveTo(L,y);g3.lineTo(Wd-R,y);g3.stroke();g3.fillStyle=COL.dim;g3.fillText((v>0?'+':'')+v,L-4,y)}
+  g3.textAlign='center';g3.textBaseline='top';
+  LBL.concat([[20,'20']]).forEach(([f,t])=>{if(f<20)return;const x=Math.round(X(f))+.5;g3.fillStyle=COL.dim;g3.fillText(t,x,H-bot+4)});
+  if(!eqRes)return;
+  const line=(a,c,lw,dash,mask)=>{g3.strokeStyle=c;g3.lineWidth=lw;g3.setLineDash(dash||[]);g3.beginPath();let on=false;
+    GF.forEach((f,i)=>{if(mask&&!eqRes.w[i]){on=false;return}const x=X(f),y=Y(a[i]);on?g3.lineTo(x,y):g3.moveTo(x,y);on=true});g3.stroke();g3.setLineDash([])};
+  g3.globalAlpha=.55;line(eqRes.dev,COL.text,1.5);g3.globalAlpha=1;
+  line(eqRes.applied,COL.y,2.5);
+  line(eqRes.after,css('--ok'),2,[4,3],true);
+  g3.font='600 10px "JetBrains Mono",Menlo,monospace';g3.textAlign='left';g3.textBaseline='middle';
+  let lx=L+4;const ly=10;
+  [[COL.text,'지금'],[COL.y,'EQ'],[css('--ok'),'보정 후']].forEach(([c,t])=>{g3.fillStyle=c;g3.fillRect(lx,ly-1,12,2.5);lx+=16;g3.fillStyle=COL.dim;g3.fillText(t,lx,ly);lx+=g3.measureText(t).width+12});
+  if(eqLock){g3.fillStyle=COL.hi;g3.textAlign='right';g3.fillText('🔒 고정',Wd-R-2,ly)}
+}
+
+// EQ 설정 시트
+function renderEqSheet(){
+  const C=CONS[eqc.con]||CONS.etc;
+  $('conPick').innerHTML=Object.entries(CONS).map(([k,c])=>`<button class="chip${k===eqc.con?' on':''}" data-con="${k}">${c.name}</button>`).join('');
+  const tg=(id,on,t,sub)=>`<div class="row"><div class="lb"><b>${t}</b><span>${sub}</span></div><button class="tgl${on?' on':''}" data-tg="${id}" aria-label="${t}"></button></div>`;
+  const stp=(id,v,t,sub,dis)=>`<div class="row sub${dis?' dis':''}"><div class="lb"><b style="font-size:13px">${t}</b><span>${sub}</span></div><div class="step"><button data-st="${id}" data-d="-1">−</button><output>${v}</output><button data-st="${id}" data-d="1">+</button></div></div>`;
+  $('eqRows').innerHTML=
+    tg('main',eqc.main,'메인 PEQ','메인 출력의 파라메트릭 EQ')+stp('mainN',eqc.mainN,'밴드 수','',!eqc.main)+
+    tg('mtx',eqc.mtx,'매트릭스 PEQ','메인을 매트릭스로 보내서 거기 EQ도 쓸 수 있을 때')+stp('mtxN',eqc.mtxN,'밴드 수','',!eqc.mtx)+
+    tg('geq',eqc.geq,'그래픽 EQ','31밴드 GEQ (주파수 · 게인만)')+stp('geqMax',eqc.geqMax,'최대 움직일 밴드','TF Flex15 = 15, 일반 = 31',!eqc.geq)+
+    stp('boost',eqc.boost,'최대 부스트 (dB)','0이면 깎기만 해요').replace('row sub','row')+
+    `<div class="row"><div class="lb"><b>보정 시작 주파수</b><span>아이폰 사파리는 125Hz 아래가 약해서 기본 125</span></div><div class="opts">${[63,125,250].map(v=>`<button class="chip${eqc.lo===v?' on':''}" data-lo="${v}">${v}</button>`).join('')}</div></div>`;
+  $('conNote').textContent=C.note+' (밴드 수·한계는 대략 기본값이라 내 콘솔과 다르면 바꿔 주세요.)';
+}
+$('eqSheet').onclick=e=>{
+  if(e.target===$('eqSheet')){$('eqSheet').hidden=true;return}
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.con){const C=CONS[b.dataset.con];eqc.con=b.dataset.con;eqc.mainN=C.n;eqc.mtxN=C.n;eqc.mtx=C.mtx;eqc.geqMax=C.geqMax}
+  else if(b.dataset.tg){eqc[b.dataset.tg]=!eqc[b.dataset.tg]}
+  else if(b.dataset.st){const k=b.dataset.st,d=+b.dataset.d,lim={mainN:[1,8],mtxN:[1,8],geqMax:[1,31],boost:[0,6]}[k];eqc[k]=clamp(eqc[k]+d,lim[0],lim[1])}
+  else if(b.dataset.lo){eqc.lo=+b.dataset.lo}
+  else return;
+  saveEqc();renderEqSheet();runEQ(true);
+};
+$('eqCon').onclick=()=>{renderEqSheet();$('eqSheet').hidden=false};
+$('eqClose').onclick=()=>{$('eqSheet').hidden=true};
+$('eqLock').onclick=()=>{eqLock=!eqLock;if(!eqLock)runEQ(true);else{renderEQ();drawEQ()}};
+$('eqCurve').onclick=()=>{eqc.curve=eqc.curve==='flat'?'house':'flat';saveEqc();runEQ(true)};
+$('eqAgain').onclick=()=>{const l=eqLock;eqLock=false;runEQ(true);eqLock=l;renderEQ()};
+addEventListener('orientationchange',()=>setTimeout(draw,300));
+
+paintStatic();renderEQ();draw();
 </script>
 </body>
 </html>

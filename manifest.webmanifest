@@ -1,0 +1,14 @@
+{
+  "name": "Flo.D Pink RTA",
+  "short_name": "Flo.D RTA",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070809",
+  "theme_color": "#070809",
+  "icons": [
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "logo.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
